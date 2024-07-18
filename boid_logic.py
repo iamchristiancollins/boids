@@ -36,5 +36,23 @@ def rule1(b: Boid):
         center_of_mass /= count
     return (center_of_mass - b.position) / 100
 
+def rule2(b: Boid):
+    c = 0
+    for boid in boids:
+        if boid != b:
+            if abs(boid.position - b.position) < 100:
+                c -= (boid.position - b.position)
+    return c
+
+def rule3(b: Boid):
+    pv: Vector = 0
+    for boid in boids:
+        if boid != b:
+            pv += boid.velocity
+            
+    pv /= len(boids) - 1
+    return (pv - b.velocity) / 8
+    
+
 def main():
     pass
