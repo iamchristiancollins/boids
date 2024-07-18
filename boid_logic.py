@@ -1,16 +1,16 @@
-from random import randint
+from random import randint, uniform
 import pygame
 
 
 # constants
-WIDTH = 800
-HEIGHT = 800
+WIDTH = 1200
+HEIGHT = 1200
 BOID_COUNT = 100
 BOID_SIZE = 5
 BOID_COLOR = (255, 255, 255)
 BOID_ACCELERATION = 0.1
-BOID_MAX_SPEED = 5
-BOID_SEPARATION_RADIUS = 20
+BOID_MAX_SPEED = 10
+BOID_SEPARATION_RADIUS = 30
 
 
 class Vector:
@@ -51,8 +51,8 @@ boids = []
 boids.extend(
     [
         Boid(
-            Vector(randint(0, 500), randint(0, 500)),
-            Vector(randint(0, 500), randint(0, 500)),
+            Vector(randint(0, WIDTH), randint(0, HEIGHT)),
+            Vector(uniform(-1, 1) * 10, uniform(-1, 1) * 10),
         )
         for i in range(BOID_COUNT)
     ]
@@ -83,30 +83,38 @@ def move_all_boids_to_new_positions() -> None:
 
 def rule1(b: Boid) -> Vector:
     center_of_mass = Vector(0, 0)
+    count = 0
     for boid in boids:
-        if boid != b:
+        if boid != b and abs(boid.position - b.position) < 50:
             center_of_mass += boid.position
-    center_of_mass /= len(boids) - 1
-    return (center_of_mass - b.position) / 100
+            count += 1
+    if count:
+        center_of_mass /= count
+        return (center_of_mass - b.position) / 100
+    return Vector(0, 0)
 
 
 def rule2(b: Boid) -> Vector:
     c = Vector(0, 0)
     for boid in boids:
         if boid != b:
-            if abs(boid.position - b.position) < BOID_SEPARATION_RADIUS:
-                c -= boid.position - b.position
-    return c
+            distance = abs(boid.position - b.position)
+            if distance < BOID_SEPARATION_RADIUS:
+                c -= (boid.position - b.position) / distance
+    return c * 0.5
 
 
 def rule3(b: Boid) -> Vector:
     pv = Vector(0, 0)
+    count = 0
     for boid in boids:
-        if boid != b:
+        if boid != b and abs(boid.position - b.position) < 100:
             pv += boid.velocity
-
-    pv /= len(boids) - 1
-    return (pv - b.velocity) / 8
+            count += 1
+    if count:
+        pv /= count
+        return (pv - b.velocity) / 8
+    return Vector(0, 0)
 
 
 def limit_velocity(b: Boid) -> None:
@@ -128,7 +136,7 @@ def bound_position(b: Boid) -> None:
 def main():
 
     pygame.init()
-    screen = pygame.display.set_mode((800, 800))
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Boids")
     clock = pygame.time.Clock()
     running = True
