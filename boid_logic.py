@@ -2,6 +2,17 @@ from random import randint
 import pygame
 
 
+# constants
+WIDTH = 800
+HEIGHT = 800
+BOID_COUNT = 100
+BOID_SIZE = 5
+BOID_COLOR = (255, 255, 255)
+BOID_ACCELERATION = 0.1
+BOID_MAX_SPEED = 5
+BOID_SEPARATION_RADIUS = 20
+
+
 class Vector:
     def __init__(self, x, y):
         self.x = x
@@ -43,7 +54,7 @@ boids.extend(
             Vector(randint(0, 500), randint(0, 500)),
             Vector(randint(0, 500), randint(0, 500)),
         )
-        for i in range(100)
+        for i in range(BOID_COUNT)
     ]
 )
 
@@ -83,7 +94,7 @@ def rule2(b: Boid) -> Vector:
     c = Vector(0, 0)
     for boid in boids:
         if boid != b:
-            if abs(boid.position - b.position) < 100:
+            if abs(boid.position - b.position) < BOID_SEPARATION_RADIUS:
                 c -= boid.position - b.position
     return c
 
@@ -99,18 +110,18 @@ def rule3(b: Boid) -> Vector:
 
 
 def limit_velocity(b: Boid) -> None:
-    if abs(b.velocity) > 15:
-        b.velocity = b.velocity / abs(b.velocity) * 15
+    if abs(b.velocity) > BOID_MAX_SPEED:
+        b.velocity = b.velocity / abs(b.velocity) * 5
 
 
 def bound_position(b: Boid) -> None:
     if b.position.x < 0:
-        b.position.x = 800
-    elif b.position.x > 800:
+        b.position.x = WIDTH
+    elif b.position.x > WIDTH:
         b.position.x = 0
     if b.position.y < 0:
-        b.position.y = 800
-    elif b.position.y > 800:
+        b.position.y = HEIGHT
+    elif b.position.y > HEIGHT:
         b.position.y = 0
 
 
