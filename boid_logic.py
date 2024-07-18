@@ -47,11 +47,22 @@ END LOOP
 """
 
 
-def draw_boids():
+def draw_boids() -> None:
     pass
 
 
-def move_all_boids_to_new_positions():
+def move_all_boids_to_new_positions() -> None:
+    v1: Vector
+    v2: Vector
+    v3: Vector
+    
+    for b in boids:
+        v1 = rule1(b)
+        v2 = rule2(b)
+        v3 = rule3(b)
+
+        b.velocity = b.velocity + v1 + v2 + v3
+        b.position = b.position + b.velocity
     """
     vector v1, v2, v3
     Boid b
@@ -63,9 +74,8 @@ def move_all_boids_to_new_positions():
         b.velocity = b.velocity + v1 + v2 + v3
         b.position = b.position + b.velocity
     """
-    pass
 
-def rule1(b: Boid):
+def rule1(b: Boid) -> Vector:
     center_of_mass = 0
     count = 0
     for boid in boids:
@@ -76,7 +86,7 @@ def rule1(b: Boid):
         center_of_mass /= count
     return (center_of_mass - b.position) / 100
 
-def rule2(b: Boid):
+def rule2(b: Boid) -> Vector:
     c = 0
     for boid in boids:
         if boid != b:
@@ -84,7 +94,7 @@ def rule2(b: Boid):
                 c -= (boid.position - b.position)
     return c
 
-def rule3(b: Boid):
+def rule3(b: Boid) -> Vector:
     pv: Vector = 0
     for boid in boids:
         if boid != b:
