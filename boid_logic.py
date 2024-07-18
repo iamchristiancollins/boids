@@ -1,10 +1,11 @@
 from random import randint, uniform
 import pygame
+import math
 
 
 # constants
 WIDTH = 1200
-HEIGHT = 1200
+HEIGHT = 800
 BOID_COUNT = 100
 BOID_SIZE = 5
 BOID_COLOR = (255, 255, 255)
@@ -61,8 +62,34 @@ boids.extend(
 
 def draw_boids(screen) -> None:
     for b in boids:
-        pygame.draw.circle(screen, (255, 255, 255), (b.position.x, b.position.y), 5)
+        angle = math.atan2(b.velocity.y, b.velocity.x)
+        cos_theta = math.cos(angle)
+        sin_theta = math.sin(angle)
+
+        # Define the points of the triangle relative to the boid's position
+        p1 = (b.position.x, b.position.y)
+        p2 = (
+            b.position.x - 10 * cos_theta + 5 * sin_theta,
+            b.position.y - 10 * sin_theta - 5 * cos_theta,
+        )
+        p3 = (
+            b.position.x - 10 * cos_theta - 5 * sin_theta,
+            b.position.y - 10 * sin_theta + 5 * cos_theta,
+        )
+
+        # Draw the triangle
+        pygame.draw.polygon(screen, BOID_COLOR, [p1, p2, p3])
     pygame.display.flip()
+
+
+# def draw_boids(screen) -> None:
+#     for b in boids:
+#         pygame.draw.polygon(screen, (255, 255, 255), [
+#             (b.position.x, b.position.y),
+#             (b.position.x + 10, b.position.y + 30),
+#             (b.position.x - 10, b.position.y + 30)
+#         ])
+#     pygame.display.flip()
 
 
 def move_all_boids_to_new_positions() -> None:
