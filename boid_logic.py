@@ -82,16 +82,6 @@ def draw_boids(screen) -> None:
     pygame.display.flip()
 
 
-# def draw_boids(screen) -> None:
-#     for b in boids:
-#         pygame.draw.polygon(screen, (255, 255, 255), [
-#             (b.position.x, b.position.y),
-#             (b.position.x + 10, b.position.y + 30),
-#             (b.position.x - 10, b.position.y + 30)
-#         ])
-#     pygame.display.flip()
-
-
 def move_all_boids_to_new_positions() -> None:
     v1: Vector
     v2: Vector
