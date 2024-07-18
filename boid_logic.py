@@ -1,3 +1,43 @@
+from Random import randint
+
+class Vector:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __add__(self, other) -> 'Vector':
+        return Vector(self.x + other.x, self.y + other.y)
+
+    def __sub__(self, other) -> 'Vector':
+        return Vector(self.x - other.x, self.y - other.y)
+
+    def __truediv__(self, other) -> 'Vector':
+        return Vector(self.x / other, self.y / other)
+
+    def __mul__(self, other) -> 'Vector':
+        return Vector(self.x * other, self.y * other)
+
+    def __abs__(self) -> float:
+        return (self.x ** 2 + self.y ** 2) ** 0.5
+
+    def __str__(self) -> str:
+        return f'({self.x}, {self.y})'
+
+    def __repr__(self) -> str:
+        return f'({self.x}, {self.y})'
+
+class Boid:
+    def __init__(self, position:Vector, velocity:Vector):
+        self.position = position
+        self.velocity = velocity
+
+
+boids = []
+
+boids.append(Boid(Vector(randint(0, 100), randint(0, 100)), Vector(randint(0, 100), randint(0, 100))) for i in range(50))
+
+
+
 """
 initialize positions of boids
 LOOP
