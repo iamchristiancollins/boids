@@ -63,7 +63,7 @@ boids.extend(
 class QuadTree:
     def __init__(self, nodes: List[QuadNode]):
         self.nodes = nodes
-
+        
     def cleanup(self) -> None:
         to_process: List[int] = []
         if self.nodes[0].count == -1:
@@ -146,6 +146,8 @@ def find_leaves(
                     to_process.append(child_data(r, b, hx, hy, fc + 3, nd.depth + 1))
 
     return leaves
+
+
 
 
 def draw_boids(screen) -> None:
