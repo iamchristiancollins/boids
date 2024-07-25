@@ -41,6 +41,70 @@ class Vector:
         return f"({self.x}, {self.y})"
 
 
+class QuadTree:
+    def __init__(self, x, y, width, height, max_boids):
+        self.root = QuadNode(x, y, width, height)
+        self.max_boids = max_boids
+        
+    def insert(self, boid):
+        self._insert(boid, self.root)
+        
+    def _insert(self, boid, node):
+        if node.children is None:
+            node.insert(boid)
+        else:
+            for child in node.children:
+                if child.contains(boid):
+                    self._insert(boid, child)
+                    break
+    
+    def query(self, boid):
+        return self.root.query(boid)
+    
+    def clear(self):
+        self.root = QuadNode(self.root.x, self.root.y, self.root.width, self.root.height)
+
+
+class QuadNode:
+    def __init__(self, x, y, width, height):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.boids = []
+        self.children = None
+    
+    def insert(self, boid):
+        if len(self.boids) < self.max_boids:
+            self.boids.append(boid)
+        else:
+            if self.children is None:
+                self._split()
+            for child in self.children:
+                if child.contains(boid):
+                    child.insert(boid)
+                    break
+    
+    def _split(self):
+        self.children = [
+            QuadNode(self.x, self.y, self.width // 2, self.height // 2),
+            QuadNode(self.x + self.width // 2, self.y, self.width // 2, self.height // 2),
+            QuadNode(self.x, self.y + self.height // 2, self.width // 2, self.height // 2),
+            QuadNode(self.x + self.width // 2, self.y + self.height // 2, self.width // 2, self.height // 2),
+        ]
+    
+    def contains(self, boid):
+        return self.x <= boid.position.x < self.x + self.width and self.y <= boid.position.y < self.y + self.height
+    
+    def query(self, boid):
+        if self.children is None:
+            return self.boids
+        for child in self.children:
+            if child.contains(boid):
+                return child.query(boid)
+        return self.boids
+
+
 class Boid:
     def __init__(self, position: Vector, velocity: Vector):
         self.position = position
