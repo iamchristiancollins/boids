@@ -106,6 +106,19 @@ def find_leaves(
             r = mx + hx
             b = my + hy
 
+            if rect[1] <= my:
+                if rect[0] <= mx:
+                    to_process.append(child_data(l, t, hx, hy, fc + 0, nd.depth + 1))
+                if rect[2] > mx:
+                    to_process.append(child_data(r, t, hx, hy, fc + 1, nd.depth + 1))
+                if rect[3] > my:
+                    if rect[0] <= mx:
+                        to_process.append(
+                            child_data(l, b, hx, hy, fc + 2, nd.depth + 1)
+                        )
+                if rect[2] > mx:
+                    to_process.append(child_data(r, b, hx, hy, fc + 3, nd.depth + 1))
+
     pass
 
 
