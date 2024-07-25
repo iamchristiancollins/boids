@@ -60,6 +60,36 @@ boids.extend(
 )
 
 
+class QuadTree:
+    def __init__(self, nodes: List[QuadNode]):
+        self.nodes = nodes
+
+
+class QuadNode:
+    def __init__(self, first_child: int, count: int):
+        self.first_child = first_child
+        self.count = count
+
+
+class QuadNodeData:
+    def __init__(self, index: int, crect: Tuple[int, int, int, int], depth: int):
+        self.index = index
+        self.crect = crect
+        self.depth = depth
+
+
+def child_data(
+    mx: int, my: int, hx: int, hy: int, index: int, depth: int
+) -> QuadNodeData:
+    return QuadNodeData(index, (mx, my, hx, hy), depth)
+
+
+def find_leaves(
+    tree: QuadTree, root: QuadNodeData, rect: Tuple[int, int, int, int]
+) -> List[QuadNodeData]:
+    pass
+
+
 def draw_boids(screen) -> None:
     for b in boids:
         angle = math.atan2(b.velocity.y, b.velocity.x)
