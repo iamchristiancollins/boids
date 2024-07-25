@@ -64,6 +64,32 @@ class QuadTree:
     def __init__(self, nodes: List[QuadNode]):
         self.nodes = nodes
 
+    def cleanup(self) -> None:
+        to_process: List[int] = []
+        if self.nodes[0].count == -1:
+            to_process.append(0)
+
+        while to_process:
+            node_index: int = to_process.pop()
+            node: QuadNode = self.nodes[node_index]
+
+            num_empty_leaves: int = 0
+            for j in range(4):
+                child_index: int = node.first_child + j
+                child: QuadNode = self.nodes[child_index]
+
+                if child.count == 0:
+                    num_empty_leaves += 1
+                elif child.count == -1:
+                    to_process.append(child_index)
+
+            if num_empty_leaves == 4:
+                self.nodes[node.first_child].first_child = self.free_node
+                self.free_node = node.first_child
+
+                node.first_child = -1
+                node.count = 0
+
 
 class QuadNode:
     def __init__(self, first_child: int, count: int):
@@ -119,7 +145,7 @@ def find_leaves(
                 if rect[2] > mx:
                     to_process.append(child_data(r, b, hx, hy, fc + 3, nd.depth + 1))
 
-    pass
+    return leaves
 
 
 def draw_boids(screen) -> None:
