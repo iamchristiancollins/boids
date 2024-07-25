@@ -87,6 +87,25 @@ def child_data(
 def find_leaves(
     tree: QuadTree, root: QuadNodeData, rect: Tuple[int, int, int, int]
 ) -> List[QuadNodeData]:
+    leaves = []
+    to_process = [root]
+
+    while len(to_process) > 0:
+        nd = to_process.pop()
+
+        if tree.nodes[nd.index] != -1:
+            leaves.push(nd)
+        else:
+            mx = nd.crect[0]
+            my = nd.crect[1]
+            hx = nd.crect[2] // 2
+            hy = nd.crect[3] // 2
+
+            l = mx - hx
+            t = my - hx
+            r = mx + hx
+            b = my + hy
+
     pass
 
 
