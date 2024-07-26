@@ -40,69 +40,116 @@ class Vector:
     def __repr__(self) -> str:
         return f"({self.x}, {self.y})"
 
+    def normalize(self) -> "Vector":
+        magnitude = abs(self)
+        if magnitude == 0:
+            return Vector(0, 0)
+        return self / magnitude
+
+    def dot(self, other) -> float:
+        return self.x * other.x + self.y * other.y
+
+
+class Node:
+    def __init__(self, position: Vector):
+        self.position = position
+        self.boids = []
+
 
 class QuadTree:
-    def __init__(self, x, y, width, height, max_boids):
-        self.root = QuadNode(x, y, width, height)
-        self.max_boids = max_boids
-        
-    def insert(self, boid):
-        self._insert(boid, self.root)
-        
-    def _insert(self, boid, node):
-        if node.children is None:
-            node.insert(boid)
-        else:
-            for child in node.children:
-                if child.contains(boid):
-                    self._insert(boid, child)
-                    break
-    
-    def query(self, boid):
-        return self.root.query(boid)
-    
-    def clear(self):
-        self.root = QuadNode(self.root.x, self.root.y, self.root.width, self.root.height)
-
-
-class QuadNode:
-    def __init__(self, x, y, width, height):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.boids = []
+    def __init__(self, topL, botR, capacity=12):
+        self.topL = topL
+        self.botR = botR
         self.children = None
-    
-    def insert(self, boid):
-        if len(self.boids) < self.max_boids:
-            self.boids.append(boid)
-        else:
+        self.topLeftTree = None
+        self.topRightTree = None
+        self.botLeftTree = None
+        self.botRightTree = None
+        self.divided = False
+        self.capacity = capacity
+        self.nodes = []
+
+    def insert(self, node: Node):
+        if not self.inBoundary(node.position):
+            return False
+
+        if len(self.nodes) < self.capacity:
+            self.nodes.append(node)
+            return True
+
+        if node is None:
+            return
+
+        if not self.inBoundary(node.position):
+            return
+        if abs(self.topL.x - self.botR.x) <= 1 and abs(self.topL.y - self.botR.y) <= 1:
             if self.children is None:
-                self._split()
-            for child in self.children:
-                if child.contains(boid):
-                    child.insert(boid)
-                    break
-    
-    def _split(self):
-        self.children = [
-            QuadNode(self.x, self.y, self.width // 2, self.height // 2),
-            QuadNode(self.x + self.width // 2, self.y, self.width // 2, self.height // 2),
-            QuadNode(self.x, self.y + self.height // 2, self.width // 2, self.height // 2),
-            QuadNode(self.x + self.width // 2, self.y + self.height // 2, self.width // 2, self.height // 2),
-        ]
-    
-    def contains(self, boid):
-        return self.x <= boid.position.x < self.x + self.width and self.y <= boid.position.y < self.y + self.height
-    
-    def query(self, boid):
-        if self.children is None:
-            return self.boids
-        for child in self.children:
-            if child.contains(boid):
-                return child.query(boid)
-        return self.boids
+                self.children = []
+            return
+
+        if (self.topL.x + self.botR.x) / 2 >= node.position.x:
+            if (self.topL.y + self.botR.y) / 2 >= node.position.y:
+                if self.topLeftTree is None:
+                    self.topLeftTree = QuadTree(
+                        self.topL,
+                        Vector(
+                            (self.topL.x + self.botR.x) / 2,
+                            (self.topL.y + self.botR.y) / 2,
+                        ),
+                    )
+                self.topLeftTree.insert(node)
+            else:
+                if self.botLeftTree is None:
+                    self.botLeftTree = QuadTree(
+                        Vector(self.topL.x, (self.topL.y + self.botR.y) / 2),
+                        Vector((self.topL.x + self.botR.x) / 2, self.botR.y),
+                    )
+                self.botLeftTree.insert(node)
+
+        else:
+            if (self.topL.y + self.botR.y) / 2 >= node.position.y:
+                if self.topRightTree is None:
+                    self.topRightTree = QuadTree(
+                        Vector((self.topL.x + self.botR.x) / 2, self.topL.y),
+                        Vector(self.botR.x, (self.topL.y + self.botR.y) / 2),
+                    )
+                self.topRightTree.insert(node)
+            else:
+                if self.botRightTree is None:
+                    self.botRightTree = QuadTree(
+                        Vector(
+                            (self.topL.x + self.botR.x) / 2,
+                            (self.topL.y + self.botR.y) / 2,
+                        ),
+                        self.botR,
+                    )
+                self.botRightTree.insert(node)
+
+    def search(self, node: Node):
+        if not self.inBoundary(node.position):
+            return None
+
+        if self.children is not None:
+            return self.children
+
+        if (self.topL.x + self.botR.x) / 2 >= node.position.x:
+            if (self.topL.y + self.botR.y) / 2 >= node.position.y:
+                return self.topLeftTree.search(node)
+            else:
+                return self.botLeftTree.search(node)
+        else:
+            if (self.topL.y + self.botR.y) / 2 >= node.position.y:
+                return self.topRightTree.search(node)
+            else:
+                return self.botRightTree.search(node)
+
+    def inBoundary(self, position: Vector):
+        return (
+            position.x >= self.topL.x
+            and position.x <= self.botR.x
+            and position.y >= self.topL.y
+            and position.y <= self.botR.y
+        )
 
 
 class Boid:
@@ -122,6 +169,11 @@ boids.extend(
         for i in range(BOID_COUNT)
     ]
 )
+
+quad_tree = QuadTree(Vector(0, 0), Vector(WIDTH, HEIGHT))
+
+for b in boids:
+    quad_tree.insert(Node(b.position))
 
 
 def draw_boids(screen) -> None:
@@ -160,6 +212,10 @@ def move_all_boids_to_new_positions() -> None:
         limit_velocity(b)
         b.position = b.position + b.velocity
         bound_position(b)
+
+    quad_tree = QuadTree(Vector(0, 0), Vector(WIDTH, HEIGHT))
+    for b in boids:
+        quad_tree.insert(Node(b.position))
 
 
 def rule1(b: Boid) -> Vector:
