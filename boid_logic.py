@@ -10,8 +10,9 @@ BOID_COUNT = 100
 BOID_SIZE = 5
 BOID_COLOR = (255, 255, 255)
 BOID_ACCELERATION = 0.1
-BOID_MAX_SPEED = 10
-BOID_SEPARATION_RADIUS = 30
+BOID_MAX_SPEED = 5
+BOID_SEPARATION_RADIUS = 10
+BOID_GROUPING_RADIUS = 50
 
 
 class Vector:
@@ -55,6 +56,9 @@ class Node:
         self.position = position
         self.boids = []
 
+    def add_boid(self, boid):
+        self.boids.append(boid)
+
 
 class QuadTree:
     def __init__(self, topL, botR, capacity=12):
@@ -74,16 +78,15 @@ class QuadTree:
             return False
 
         if len(self.nodes) < self.capacity:
+            for existing_node in self.nodes:
+                if existing_node.position == node.position:
+                    existing_node.add_boid(node.boids[0])
+                    return True
             self.nodes.append(node)
             return True
 
         if not self.divided:
             self.subdivide()
-
-        if abs(self.topL.x - self.botR.x) <= 1 and abs(self.topL.y - self.botR.y) <= 1:
-            if self.children is None:
-                self.children = []
-            return
 
         if (self.topL.x + self.botR.x) / 2 >= node.position.x:
             if (self.topL.y + self.botR.y) / 2 >= node.position.y:
@@ -121,7 +124,7 @@ class QuadTree:
                         ),
                         self.botR,
                     )
-                self.botRightTree.insert(node)
+                return self.botRightTree.insert(node)
 
     def subdivide(self):
         self.divided = True
@@ -188,22 +191,20 @@ class Boid:
         self.velocity = velocity
 
 
-boids = []
-
-boids.extend(
-    [
-        Boid(
-            Vector(randint(0, WIDTH), randint(0, HEIGHT)),
-            Vector(uniform(-1, 1) * 10, uniform(-1, 1) * 10),
-        )
-        for i in range(BOID_COUNT)
-    ]
-)
+boids = [
+    Boid(
+        Vector(randint(0, WIDTH), randint(0, HEIGHT)),
+        Vector(uniform(-1, 1) * 10, uniform(-1, 1) * 10),
+    )
+    for _ in range(BOID_COUNT)
+]
 
 quad_tree = QuadTree(Vector(0, 0), Vector(WIDTH, HEIGHT))
 
 for b in boids:
-    quad_tree.insert(Node(b.position))
+    node = Node(b.position)
+    node.add_boid(b)
+    quad_tree.insert(node)
 
 
 def draw_boids(screen) -> None:
@@ -234,7 +235,7 @@ def move_all_boids_to_new_positions() -> None:
     v3: Vector
 
     global quad_tree
-    quad_tree = QuadTree(Vector(0, 0), Vector(WIDTH, HEIGHT))
+    quad_tree = QuadTree(Vector(0, 0), (Vector(WIDTH, HEIGHT)))
 
     for b in boids:
         v1 = rule1(b)
@@ -246,7 +247,9 @@ def move_all_boids_to_new_positions() -> None:
         b.position = b.position + b.velocity
         bound_position(b)
 
-        quad_tree.insert(Node(b.position))
+        node = Node(b.position)
+        node.add_boid(b)
+        quad_tree.insert(node)
 
 
 def get_nearby_boids(b: Boid, radius: float) -> list[Boid]:
@@ -257,25 +260,31 @@ def get_nearby_boids(b: Boid, radius: float) -> list[Boid]:
     )
     nodes = quad_tree.search(search_area)
 
-    return [boid for node in nodes for boid in node.boids if boid != b]
+    nearby_boids = []
+    for node in nodes:
+        for boid in node.boids:
+            if abs(boid.position - b.position) < radius:
+                nearby_boids.append(boid)
+
+    return [boid for boid in nearby_boids if boid != b]
 
 
 def rule1(b: Boid) -> Vector:
     center_of_mass = Vector(0, 0)
     count = 0
-    nearby_boids = get_nearby_boids(b, 50)
+    nearby_boids = get_nearby_boids(b, BOID_GROUPING_RADIUS)
     for boid in nearby_boids:
         center_of_mass += boid.position
         count += 1
     if count:
         center_of_mass /= count
-        return (center_of_mass - b.position) / 50
+        return (center_of_mass - b.position) / 100
     return Vector(0, 0)
 
 
 def rule2(b: Boid) -> Vector:
     c = Vector(0, 0)
-    nearby_boids = get_nearby_boids(b, 50)
+    nearby_boids = get_nearby_boids(b, BOID_SEPARATION_RADIUS)
     for boid in nearby_boids:
         distance = abs(boid.position - b.position)
         if distance < BOID_SEPARATION_RADIUS:
@@ -286,19 +295,21 @@ def rule2(b: Boid) -> Vector:
 def rule3(b: Boid) -> Vector:
     pv = Vector(0, 0)
     count = 0
-    nearby_boids = get_nearby_boids(b, 100)
+    nearby_boids = get_nearby_boids(b, BOID_GROUPING_RADIUS)
+    # print(f"nearby boids: {nearby_boids}")
     for boid in nearby_boids:
         pv += boid.velocity
         count += 1
     if count:
         pv /= count
-        return (pv - b.velocity) / 2
+        return (pv - b.velocity) / 8
     return Vector(0, 0)
 
 
 def limit_velocity(b: Boid) -> None:
-    if abs(b.velocity) > BOID_MAX_SPEED:
-        b.velocity = b.velocity / abs(b.velocity) * 5
+    speed = abs(b.velocity)
+    if speed > BOID_MAX_SPEED:
+        b.velocity = (b.velocity / speed) * BOID_MAX_SPEED
 
 
 def bound_position(b: Boid) -> None:
