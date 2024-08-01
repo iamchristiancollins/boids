@@ -77,9 +77,8 @@ class QuadTree:
             self.nodes.append(node)
             return True
 
-        if not self.divided
+        if not self.divided:
             self.subdivide()
-            
 
         if abs(self.topL.x - self.botR.x) <= 1 and abs(self.topL.y - self.botR.y) <= 1:
             if self.children is None:
@@ -123,7 +122,7 @@ class QuadTree:
                         self.botR,
                     )
                 self.botRightTree.insert(node)
-                
+
     def subdivide(self):
         self.divided = True
         self.topLeftTree = QuadTree(
@@ -142,9 +141,8 @@ class QuadTree:
             Vector((self.topL.x + self.botR.x) / 2, (self.topL.y + self.botR.y) / 2),
             self.botR,
         )
-        
 
-    def search(self, range):
+    def search(self, range) -> list[Node]:
         found = []
         if not self.intersects(range):
             return found
@@ -267,12 +265,11 @@ def rule1(b: Boid) -> Vector:
     count = 0
     nearby_boids = get_nearby_boids(b, 50)
     for boid in nearby_boids:
-        if boid != b and abs(boid.position - b.position) < 50:
-            center_of_mass += boid.position
-            count += 1
+        center_of_mass += boid.position
+        count += 1
     if count:
         center_of_mass /= count
-        return (center_of_mass - b.position) / 100
+        return (center_of_mass - b.position) / 50
     return Vector(0, 0)
 
 
@@ -280,10 +277,9 @@ def rule2(b: Boid) -> Vector:
     c = Vector(0, 0)
     nearby_boids = get_nearby_boids(b, 50)
     for boid in nearby_boids:
-        if boid != b:
-            distance = abs(boid.position - b.position)
-            if distance < BOID_SEPARATION_RADIUS:
-                c -= (boid.position - b.position) / distance
+        distance = abs(boid.position - b.position)
+        if distance < BOID_SEPARATION_RADIUS:
+            c -= (boid.position - b.position) / distance
     return c * 0.5
 
 
@@ -292,12 +288,11 @@ def rule3(b: Boid) -> Vector:
     count = 0
     nearby_boids = get_nearby_boids(b, 100)
     for boid in nearby_boids:
-        if boid != b and abs(boid.position - b.position) < 100:
-            pv += boid.velocity
-            count += 1
+        pv += boid.velocity
+        count += 1
     if count:
         pv /= count
-        return (pv - b.velocity) / 8
+        return (pv - b.velocity) / 2
     return Vector(0, 0)
 
 
