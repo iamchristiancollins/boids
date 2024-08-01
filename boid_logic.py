@@ -125,7 +125,7 @@ class QuadTree:
                     )
                 self.botRightTree.insert(node)
 
-    def search(self, range: QuadTree):
+    def search(self, range):
         found = []
         if not self.intersects(range):
             return found
@@ -140,7 +140,7 @@ class QuadTree:
         found.extend(self.botRightTree.search(range))
         return found
 
-    def intersects(self, range: QuadTree):
+    def intersects(self, range):
         return not (
             range.topL.x > self.botR.x
             or range.botR.x < self.topL.x
@@ -247,7 +247,7 @@ def rule1(b: Boid) -> Vector:
     center_of_mass = Vector(0, 0)
     count = 0
     nearby_boids = get_nearby_boids(b, 50)
-    for boid in neaby_boids:
+    for boid in nearby_boids:
         if boid != b and abs(boid.position - b.position) < 50:
             center_of_mass += boid.position
             count += 1
@@ -271,7 +271,7 @@ def rule2(b: Boid) -> Vector:
 def rule3(b: Boid) -> Vector:
     pv = Vector(0, 0)
     count = 0
-    neaby_boids = get_nearby_boids(b, 100)
+    nearby_boids = get_nearby_boids(b, 100)
     for boid in nearby_boids:
         if boid != b and abs(boid.position - b.position) < 100:
             pv += boid.velocity
