@@ -233,7 +233,8 @@ def get_nearby_boids(b: Boid, radius: float) -> list[Boid]:
 def rule1(b: Boid) -> Vector:
     center_of_mass = Vector(0, 0)
     count = 0
-    for boid in boids:
+    nearby_boids = get_nearby_boids(b, 50)
+    for boid in neaby_boids:
         if boid != b and abs(boid.position - b.position) < 50:
             center_of_mass += boid.position
             count += 1
@@ -245,7 +246,8 @@ def rule1(b: Boid) -> Vector:
 
 def rule2(b: Boid) -> Vector:
     c = Vector(0, 0)
-    for boid in boids:
+    nearby_boids = get_nearby_boids(b, 50)
+    for boid in nearby_boids:
         if boid != b:
             distance = abs(boid.position - b.position)
             if distance < BOID_SEPARATION_RADIUS:
@@ -256,7 +258,8 @@ def rule2(b: Boid) -> Vector:
 def rule3(b: Boid) -> Vector:
     pv = Vector(0, 0)
     count = 0
-    for boid in boids:
+    neaby_boids = get_nearby_boids(b, 100)
+    for boid in nearby_boids:
         if boid != b and abs(boid.position - b.position) < 100:
             pv += boid.velocity
             count += 1
