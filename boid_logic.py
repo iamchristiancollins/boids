@@ -77,11 +77,10 @@ class QuadTree:
             self.nodes.append(node)
             return True
 
-        if node is None:
-            return
+        if not self.divided
+            self.subdivide()
+            
 
-        if not self.inBoundary(node.position):
-            return
         if abs(self.topL.x - self.botR.x) <= 1 and abs(self.topL.y - self.botR.y) <= 1:
             if self.children is None:
                 self.children = []
@@ -124,6 +123,26 @@ class QuadTree:
                         self.botR,
                     )
                 self.botRightTree.insert(node)
+                
+    def subdivide(self):
+        self.divided = True
+        self.topLeftTree = QuadTree(
+            self.topL,
+            Vector((self.topL.x + self.botR.x) / 2, (self.topL.y + self.botR.y) / 2),
+        )
+        self.topRightTree = QuadTree(
+            Vector((self.topL.x + self.botR.x) / 2, self.topL.y),
+            Vector(self.botR.x, (self.topL.y + self.botR.y) / 2),
+        )
+        self.botLeftTree = QuadTree(
+            Vector(self.topL.x, (self.topL.y + self.botR.y) / 2),
+            Vector((self.topL.x + self.botR.x) / 2, self.botR.y),
+        )
+        self.botRightTree = QuadTree(
+            Vector((self.topL.x + self.botR.x) / 2, (self.topL.y + self.botR.y) / 2),
+            self.botR,
+        )
+        
 
     def search(self, range):
         found = []
