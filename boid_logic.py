@@ -202,7 +202,7 @@ def move_all_boids_to_new_positions() -> None:
     v1: Vector
     v2: Vector
     v3: Vector
-    
+
     global quad_tree
     quad_tree = QuadTree(Vector(0, 0), Vector(WIDTH, HEIGHT))
 
@@ -215,8 +215,19 @@ def move_all_boids_to_new_positions() -> None:
         limit_velocity(b)
         b.position = b.position + b.velocity
         bound_position(b)
-        
+
         quad_tree.insert(Node(b.position))
+
+
+def get_nearby_boids(b: Boid, radius: float) -> list[Boid]:
+
+    search_area = QuadTree(
+        Vector(b.position.x - radius, b.position.y - radius),
+        Vector(b.position.x + radius, b.position.y + radius),
+    )
+    nodes = quad_tree.search(search_area)
+    
+    return [boid for node in nodes for boid in node.boids if boid != b]
 
 
 def rule1(b: Boid) -> Vector:
