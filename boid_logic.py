@@ -202,6 +202,9 @@ def move_all_boids_to_new_positions() -> None:
     v1: Vector
     v2: Vector
     v3: Vector
+    
+    global quad_tree
+    quad_tree = QuadTree(Vector(0, 0), Vector(WIDTH, HEIGHT))
 
     for b in boids:
         v1 = rule1(b)
@@ -212,9 +215,7 @@ def move_all_boids_to_new_positions() -> None:
         limit_velocity(b)
         b.position = b.position + b.velocity
         bound_position(b)
-
-    quad_tree = QuadTree(Vector(0, 0), Vector(WIDTH, HEIGHT))
-    for b in boids:
+        
         quad_tree.insert(Node(b.position))
 
 
