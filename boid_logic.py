@@ -125,23 +125,36 @@ class QuadTree:
                     )
                 self.botRightTree.insert(node)
 
-    def search(self, node: Node):
-        if not self.inBoundary(node.position):
-            return None
+    def search(self, range: QuadTree):
+        found = []
+        if not self.intersects(range):
+            return found
+        for node in self.nodes:
+            if range.contains(node.position):
+                found.append(node)
+        if not self.divided:
+            return found
+        found.extend(self.topLeftTree.search(range))
+        found.extend(self.topRightTree.search(range))
+        found.extend(self.botLeftTree.search(range))
+        found.extend(self.botRightTree.search(range))
+        return found
 
-        if self.children is not None:
-            return self.children
+    def intersects(self, range: QuadTree):
+        return not (
+            range.topL.x > self.botR.x
+            or range.botR.x < self.topL.x
+            or range.topL.y > self.botR.y
+            or range.botR.y < self.topL.y
+        )
 
-        if (self.topL.x + self.botR.x) / 2 >= node.position.x:
-            if (self.topL.y + self.botR.y) / 2 >= node.position.y:
-                return self.topLeftTree.search(node)
-            else:
-                return self.botLeftTree.search(node)
-        else:
-            if (self.topL.y + self.botR.y) / 2 >= node.position.y:
-                return self.topRightTree.search(node)
-            else:
-                return self.botRightTree.search(node)
+    def contains(self, position: Vector):
+        return (
+            position.x >= self.topL.x
+            and position.x <= self.botR.x
+            and position.y >= self.topL.y
+            and position.y <= self.botR.y
+        )
 
     def inBoundary(self, position: Vector):
         return (
@@ -226,7 +239,7 @@ def get_nearby_boids(b: Boid, radius: float) -> list[Boid]:
         Vector(b.position.x + radius, b.position.y + radius),
     )
     nodes = quad_tree.search(search_area)
-    
+
     return [boid for node in nodes for boid in node.boids if boid != b]
 
 
